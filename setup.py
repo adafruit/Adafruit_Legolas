@@ -13,5 +13,5 @@ setup(name              = 'Adafruit_Legolas',
       license           = 'MIT',
       url               = 'https://github.com/adafruit/Adafruit_Legolas',
       entry_points      = {'console_scripts': ['legolas = Adafruit_Legolas.main:main']},
-      install_requires  = ['Click', 'IntelHex', 'pyelftools'],
+      install_requires  = ['Click', 'IntelHex', 'pyelftools', 'tabulate'],
       packages          = find_packages())

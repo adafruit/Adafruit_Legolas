@@ -13,6 +13,7 @@ from elftools.elf.elffile import ELFFile
 from elftools.elf.descriptions import *
 from elftools.elf.sections import SymbolTableSection
 from elftools.elf.gnuversions import *
+from tabulate import tabulate
 
 from ..main import main
 
@@ -157,8 +158,12 @@ class ELFQuery(object):
                 self.db.commit()
 
     def query(self, query):
-        """Perform SQL query against symbols and return result table."""
-        return self.db.execute(query)
+        """Perform SQL query against symbols and return result rows and column
+        names.
+        """
+        cursor = self.db.execute(query)
+        columns = map(lambda x: x[0], cursor.description)
+        return (cursor.fetchall(), columns)
 
 
 def list_columns(ctx, param, value):
@@ -188,10 +193,12 @@ def list_columns(ctx, param, value):
               expose_value=False,
               is_eager=True,
               help='list symbol attributes/columns that can be queried')
-# Add option to change the column delineator (default is comma).
-@click.option('--delineator', '-d',
-              default=',',
-              help='delineator for result columns (default is comma)')
+# Add option to change how data is displayed, either in a friendly human-readable
+# format, or as a machine-friendly parseable format like CSV, TSV, etc.
+@click.option('--output-format', '-f',
+              type=click.Choice(['friendly','csv','tsv']),
+              default='friendly',
+              help='format for results (default is friendly human-readable table)')
 # Add option to output to a file (default is standard output).
 @click.option('--output', '-o',
               type=click.File('wb'),
@@ -200,7 +207,7 @@ def list_columns(ctx, param, value):
 # Define the command code.  Notice how click will send in parsed parameters as
 # arguments to the function.  Also note click will use the docstring as the
 # full help text for the command.
-def elfquery(input_file, query, delineator, output):
+def elfquery(input_file, query, output_format, output):
     """Query ELF symbols using a SQL-style query.
 
     Provide two arguments, a path to an ELF file and a SQL query to make against
@@ -230,7 +237,7 @@ def elfquery(input_file, query, delineator, output):
 
     To list all variables in RAM sorted by size:
 
-      legolas elfquery <file> "SELECT Size,Name,Value FROM symbols WHERE Type = 'OBJECT' ORDER BY Size Asc"
+      legolas elfquery <file> "SELECT Size, Name, Value FROM symbols WHERE Type = 'OBJECT' ORDER BY Size ASC"
 
     To show the size of all values in the above RAM list:
 
@@ -243,12 +250,24 @@ def elfquery(input_file, query, delineator, output):
 
     Any query supported by SQLite is possible against the symbols table.
 
-    Results will be written to standard output by default, however they can be
-    directed to a file with the --output option.  The results will contain a
-    line for each row and all the of column values delineated by the specified
-    delineator (default is a comma, see the --delineator option).
+    Results will be written as a friendly table format to standard output by
+    default.  However look at the --output option to write results to a file,
+    and the --output-format option to write results in a machine-friendly format
+    like a comma or tab separated file.
     """
     elfquery = ELFQuery(input_file)
-    for row in elfquery.query(query):
-        output.write(delineator.join(map(lambda x: str(x).strip(), row)))
-        output.write('\n')
+    result, columns = elfquery.query(query)
+    if output_format == 'friendly':
+        output.write(tabulate(result, columns))
+        output.write('\n\n')
+        output.write('Query returned {0} rows.\n\n'.format(len(result)))
+    elif output_format == 'csv':
+        for row in result:
+            output.write(','.join(map(lambda x: str(x).strip(), row)))
+            output.write('\n')
+    elif output_format == 'tsv':
+        for row in result:
+            output.write('\t'.join(map(lambda x: str(x).strip(), row)))
+            output.write('\n')
+    else:
+        raise click.UsageError('Unknown output format!')

@@ -212,13 +212,21 @@ def elfquery(input_file, query, delineator, output):
 
       legolas elfquery <file> "SELECT * FROM symbols ORDER BY Section, Number ASC"
 
-    Or to select the name of each symbol from section '.symtab':
+    To select the name of each symbol from section '.symtab':
 
       legolas elfquery <file> "SELECT Name FROM symbols WHERE Section = '.symtab'"
 
-    Or to do the same query but also restrict it to symbols with size > 256:
+    To do the same query but also restrict it to symbols with size > 256:
 
       legolas elfquery <file> "SELECT Name FROM symbols WHERE Section = '.symtab' AND Size > 256"
+
+    To select all symbol data for symbols that are of type 'FUNC' or 'OBJECT':
+
+      legolas elfquery <file> "SELECT * FROM symbols WHERE Type IN ('FUNC', 'OBJECT')"
+
+    To select the name and size of the 5 largest symbols:
+
+      legolas elfquery <file> "SELECT Name, Size FROM symbols ORDER BY Size DESC LIMIT 5"
 
     You can even do more advanced queries like counting how many unique Type
     values exist:

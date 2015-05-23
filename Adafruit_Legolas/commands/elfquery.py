@@ -228,6 +228,14 @@ def elfquery(input_file, query, delineator, output):
 
       legolas elfquery <file> "SELECT Name, Size FROM symbols ORDER BY Size DESC LIMIT 5"
 
+    To list all variables in RAM sorted by size:
+
+      legolas elfquery <file> "SELECT Size,Name,Value FROM symbols WHERE Type = 'OBJECT' ORDER BY Size Asc"
+
+    To show the size of all values in the above RAM list:
+
+      legolas elfquery <file> "SELECT SUM(Size) FROM symbols WHERE Type = 'OBJECT'"
+
     You can even do more advanced queries like counting how many unique Type
     values exist:
 

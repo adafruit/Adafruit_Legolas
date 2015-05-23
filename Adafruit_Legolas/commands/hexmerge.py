@@ -5,10 +5,10 @@
 # Author: Tony DiCola
 import sys
 
-from ..main import main
-
 import click
 import intelhex
+
+from ..main import main
 
 
 # Definition of the hexmerge command follows below.  First the command is

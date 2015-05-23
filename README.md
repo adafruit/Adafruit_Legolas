@@ -23,7 +23,7 @@ commands and options.
 
 To uninstall use the pip tool:
 
-    sudo pip uninstall Adafruit-Legolas
+    sudo pip uninstall Adafruit_Legolas
 
 ## Adding Commands
 

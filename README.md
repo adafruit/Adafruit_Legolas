@@ -29,7 +29,7 @@ To uninstall use the pip tool:
 
 To add new commands to legolas look inside the `Adafruit_Legolas/commands`
 folder.  Each file will be loaded and any function that has the `@main.command()`
-decorator will be available as subcommand.  The tool makes heavy use of the
+decorator will be available as a subcommand.  The tool makes heavy use of the
 [Click framework](http://click.pocoo.org/4/) as its command line infrastructure.
-See the `hexmerge.py` and the comments within for some guidance on how to add
-and use parameters in a command.
+See the `hexmerge.py` command file and the comments within for some guidance on
+how to add parameters and use Click.

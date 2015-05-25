@@ -3,6 +3,7 @@
 # Query the attributes of an ELF file using a SQL query syntax.
 #
 # Author: Tony DiCola
+import cmd
 import sqlite3
 import sys
 
@@ -166,14 +167,71 @@ class ELFQuery(object):
         return (cursor.fetchall(), columns)
 
 
-def list_columns(ctx, param, value):
-    # Print out the list of columns and quit when --list-columns is invoked.
-    if not value or ctx.resilient_parsing:
-        return
+class InteractiveELFQuery(cmd.Cmd):
+    # Python Cmd module implementation for a simple interactive query loop.
+
+    prompt = 'SQL> '
+
+    def __init__(self, elfquery):
+        # cmd.Cmd is an old style class and can't use super, so call the init
+        # directly.
+        cmd.Cmd.__init__(self)
+        self.elfquery = elfquery
+
+    def do_quit(self, line):
+        """Quit the program."""
+        sys.exit(0)
+
+    def do_exit(self, line):
+        """Quit the program."""
+        sys.exit(0)
+
+    def do_columns(self, line):
+        """List the columns available to query."""
+        print_columns()
+
+    def default(self, query):
+        """Run query against ELF file."""
+        try:
+            result, columns = self.elfquery.query(query)
+            print_results(result, columns, sys.stdout, 'friendly')
+        except sqlite3.Error as ex:
+            click.echo('ERROR: {0}'.format(ex.message))
+
+
+def print_columns():
+    # Print out the list of columns.
     click.echo("Table 'symbols' has the following columns:")
     for col in COLUMNS:
         click.echo('{0}'.format(col[0]))
+
+
+def list_columns(ctx, param, value):
+    # Called when the --list-columns option is parsed.  Print out columns and 
+    # stop any further processing.
+    if not value or ctx.resilient_parsing:
+        return
+    print_columns()
     ctx.exit()
+
+
+def print_results(result, columns, output, output_format):
+    # Print out the results of a query to the specified output and using the
+    # specified output format.
+    if output_format == 'friendly':
+        output.write(tabulate(result, columns))
+        output.write('\n\n')
+        output.write('Query returned {0} rows.\n\n'.format(len(result)))
+    elif output_format == 'csv':
+        for row in result:
+            output.write(','.join(map(lambda x: str(x).strip(), row)))
+            output.write('\n')
+    elif output_format == 'tsv':
+        for row in result:
+            output.write('\t'.join(map(lambda x: str(x).strip(), row)))
+            output.write('\n')
+    else:
+        raise click.UsageError('Unknown output format!')
 
 
 @main.command(short_help='query symbols of an ELF file using a SQL query syntax')
@@ -181,8 +239,10 @@ def list_columns(ctx, param, value):
 @click.argument('input_file',
                 metavar='FILE',
                 type=click.File('rb'))
-# Also take a string to use as the query.
+# Also take a string to use as the query.  This is optional and if not provided
+# the program will enter an interactive query mode.
 @click.argument('query',
+                required=False,
                 metavar='"QUERY"')
 # Add option to list all the attributes/columns that can be queried.
 # This is an eager callback that will quit the program immediately, see:
@@ -210,10 +270,13 @@ def list_columns(ctx, param, value):
 def elfquery(input_file, query, output_format, output):
     """Query ELF symbols using a SQL-style query.
 
-    Provide two arguments, a path to an ELF file and a SQL query to make against
-    the file.  The SQL query should be made against the table 'symbols' and it
-    contains a row for each symbol (see the --list-columns option to list the
-    available column names).
+    Provide two arguments, a path to an ELF file and an optional SQL query to 
+    make against the file.  The SQL query should be made against the table 
+    'symbols' and it contains a row for each symbol (see the --list-columns
+    option to list the available column names).
+
+    If no query is provided then an interactive command loop will start where 
+    multiple queries can be run successively.
 
     For example to list every symbol in order:
 
@@ -253,21 +316,16 @@ def elfquery(input_file, query, output_format, output):
     Results will be written as a friendly table format to standard output by
     default.  However look at the --output option to write results to a file,
     and the --output-format option to write results in a machine-friendly format
-    like a comma or tab separated file.
+    like a comma or tab separated file.  Note that the output and output format
+    options are ignored in interactive query mode.
     """
     elfquery = ELFQuery(input_file)
-    result, columns = elfquery.query(query)
-    if output_format == 'friendly':
-        output.write(tabulate(result, columns))
-        output.write('\n\n')
-        output.write('Query returned {0} rows.\n\n'.format(len(result)))
-    elif output_format == 'csv':
-        for row in result:
-            output.write(','.join(map(lambda x: str(x).strip(), row)))
-            output.write('\n')
-    elif output_format == 'tsv':
-        for row in result:
-            output.write('\t'.join(map(lambda x: str(x).strip(), row)))
-            output.write('\n')
+    if query is not None:
+        # Query was sent in command line, process it and then exit.
+        result, columns = elfquery.query(query)
+        print_results(result, columns, output, output_format)
     else:
-        raise click.UsageError('Unknown output format!')
+        # Interactive mode using a command loop.
+        click.echo('Interactive query mode.  Enter query at prompt, help for command list, or quit to exit program.')
+        loop = InteractiveELFQuery(elfquery)
+        loop.cmdloop()

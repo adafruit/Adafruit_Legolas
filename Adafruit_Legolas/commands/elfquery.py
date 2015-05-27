@@ -74,7 +74,7 @@ Note that a TO_HEX function is available which can convert a column to a
 zero-padded hexadecimal string of the specified width for easier reading.
 For example to grab the name and value of each symbol:
 
-  SELECT Name, TO_HEX(Value, 8) FROM symbols ORDER BY Number ASC
+  SELECT Name, TO_HEX(Value, 8) AS Value FROM symbols ORDER BY Number ASC
 
 To select the name of each symbol related to the '.bss' section:
 
@@ -87,7 +87,7 @@ To do the same query but also restrict it to symbols with size > 256 bytes:
 There is also a FROM_HEX function that can be used to filter against hex values
 easily.  For example to select all symbols with value between 0xFF and 0xFFFF:
 
-  SELECT Name, TO_HEX(Value, 8) FROM symbols WHERE Value > FROM_HEX('FF') AND Value < FROM_HEX('FFFF')
+  SELECT Name, TO_HEX(Value, 8) AS Value FROM symbols WHERE Value > FROM_HEX('FF') AND Value < FROM_HEX('FFFF')
 
 To select all symbol data for symbols that are of type 'FUNC' or 'OBJECT':
 
@@ -99,7 +99,7 @@ To select the name and size of the 5 largest symbols:
 
 To list all variables in RAM ('.bss' section) sorted by size:
 
-  SELECT to_hex(Value, 8), Size, Section, Name FROM symbols WHERE Section = ".bss" AND Size > 0 ORDER BY Size Asc
+  SELECT TO_HEX(Value, 8) AS Value, Size, Section, Name FROM symbols WHERE Section = ".bss" AND Size > 0 ORDER BY Size ASC
 
 You can even do more advanced queries like counting how many unique Type
 values exist:

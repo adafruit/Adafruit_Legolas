@@ -1,7 +1,18 @@
 # legolas
 
 Command line tool to manipulate ELF and other binary & executable files for
-embedded systems.
+embedded systems.  For example legolas allows you to query the contents of
+an ELF file using SQL (structured query language) syntax.  You can do simple
+queries such as listing all of the symbols:
+
+    legolas elfquery <file> "SELECT * FROM symbols"
+
+Or more advanced queries like listing the contents of RAM in increasing size:
+
+    legolas elfquery <file> "SELECT TO_HEX(Value, 8) AS Value, Size, Section, Name FROM symbols WHERE Section = ".bss" AND Size > 0 ORDER BY Size ASC"
+
+Internally legolas uses an in-memory SQLite database to hold ELF metadata so
+the full power of SQLite database queries are available to you!
 
 ## Installation
 

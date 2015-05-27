@@ -7,12 +7,26 @@ queries such as listing all of the symbols:
 
     legolas elfquery <file> "SELECT * FROM symbols"
 
-Or more advanced queries like listing the contents of RAM in increasing size:
+Or more advanced queries like listing the 5 biggest variables in RAM:
 
-    legolas elfquery <file> "SELECT TO_HEX(Value, 8) AS Value, Size, Section, Name FROM symbols WHERE Section = '.bss' AND Size > 0 ORDER BY Size ASC"
+    legolas elfquery <file> "SELECT TO_HEX(Value, 8) AS Value, Size, Section, Name FROM symbols WHERE Section = '.bss' ORDER BY Size DESC LIMIT 5"
 
-Internally legolas uses an in-memory SQLite database to hold ELF metadata so
-the full power of SQLite database queries are available to you!
+Which returns an easy to read list like:
+
+    Value       Size  Section    Name
+    --------  ------  ---------  ------------------
+    20003570    1580  .bss       nvm_data
+    20002B00     848  .bss       APP_TIMER_BUF.9419
+    20003350     404  .bss       m_cmd_queue
+    20003008     376  .bss       m_hids
+    20002EF0     160  .bss       cmd_buffer
+    
+    Query returned 5 rows.
+
+Results can be returned in other formats like CSV or TSV files for easy parsing
+by scripts and programs.  Internally legolas uses an in-memory SQLite database 
+to hold ELF metadata so the full power of SQLite database queries are available
+to you!
 
 ## Installation
 

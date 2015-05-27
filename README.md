@@ -25,6 +25,19 @@ To uninstall use the pip tool:
 
     sudo pip uninstall Adafruit_Legolas
 
+## Available Commands
+
+Legolas is composed of subcommands that can perform useful actions.  To see a list
+of all available commands run `legolas --help`.  To see the usage for a specific
+command run it with `--help` like `legolas elfquery --help` to see help on the
+elfquery command.
+
+The following commands are available:
+
+-   hexmerge - Merge a collection of Intel format .hex files into a single file.
+
+-   elfquery - Query the contents of an ELF binary file using SQL (structured query language).
+
 ## Adding Commands
 
 To add new commands to legolas look inside the `Adafruit_Legolas/commands`

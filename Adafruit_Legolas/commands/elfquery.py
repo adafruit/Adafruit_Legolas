@@ -75,13 +75,9 @@ To select the name and size of the 5 largest symbols:
 
   SELECT Name, Size FROM symbols ORDER BY Size DESC LIMIT 5
 
-To list all variables in RAM sorted by size:
+To list all variables in RAM ('.bss' section) sorted by size:
 
-  SELECT Size, Name, Value FROM symbols WHERE Type = 'OBJECT' ORDER BY Size ASC
-
-To show the size of all values in the above RAM list:
-
-  SELECT SUM(Size) FROM symbols WHERE Type = 'OBJECT'
+  SELECT to_hex(Value, 8), Size, Section, Name FROM symbols WHERE Section = ".bss" AND Size > 0 ORDER BY Size Asc
 
 You can even do more advanced queries like counting how many unique Type
 values exist:

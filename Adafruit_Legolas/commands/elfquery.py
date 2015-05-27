@@ -18,7 +18,6 @@ from ..main import main
 
 
 # Symbol table column names and types.
-# TODO: Convert value to integer and convert to hex when printing.
 SYMBOL_COLS = [('Number',       'integer primary key autoincrement'),
                ('Value',        'integer'),
                ('Size',         'integer'),

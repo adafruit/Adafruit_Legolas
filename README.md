@@ -1,4 +1,4 @@
-# Adafruit Legolas
+# legolas
 
 Command line tool to manipulate ELF and other binary & executable files for
 embedded systems.

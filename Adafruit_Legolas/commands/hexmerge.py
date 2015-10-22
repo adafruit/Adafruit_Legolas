@@ -43,17 +43,17 @@ from ..main import main
 #   - http://click.pocoo.org/4/options/
 #   - http://click.pocoo.org/4/parameters/
 # Take an unlimited number of input file paths (ensuring all exist first).
-@click.argument('inputs', 
+@click.argument('inputs',
                 nargs=-1,
                 metavar='[FILE]...',
                 type=click.Path(exists=True))
 # Add option to specify the output file (default to none which will use stdout).
-@click.option('-o', '--output', 
+@click.option('-o', '--output',
               type=click.Path(),
               help='output file (defaults to stdout)')
 # Add option to pick how overlapping ranges are handled, either to fail with an
 # error or to ignore them (last written wins).
-@click.option('--overlap', 
+@click.option('--overlap',
               type=click.Choice(['error', 'ignore']),
               default='error',
               help='how to handle when hex files overlap.  Can be either error to fail (the default), or ignore to allow the overlap.')
@@ -65,8 +65,8 @@ def hexmerge(inputs, output, overlap):
 
     Provide the path to each input file as a separate argument.  For example to
     merge three files run:
-    
-      adahex hexmerge file1.hex file2.hex file3.hex
+
+      legolas hexmerge file1.hex file2.hex file3.hex
 
     By default the merged hex file is written to standard output, however see
     the output option below to write to a file.

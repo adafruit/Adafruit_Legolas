@@ -32,6 +32,28 @@ from . import __version__
 import click
 
 
+# Useful click option type for a value that can be specified as hex or decimal.
+class HexInt(click.ParamType):
+    """Custom click parameter type for an integer which can be specified as a
+    hex value (starts with 0x...), octal (starts with 0), or decimal value.
+    """
+    name = 'integer (supports hex with 0x)'
+
+    def convert(self, value, param, ctx):
+        # Allow null/none value.
+        if value is None:
+            return None
+        # Use int class to automatically convert decimal, hex, etc. string to
+        # a integer value.
+        try:
+            return int(value, 0)
+        except:
+            self.fail('%s is not a valid integer' % value, param, ctx)
+
+    def __repr__(self):
+        return 'INT'
+
+
 @click.group()
 @click.version_option(version=__version__)
 def main():

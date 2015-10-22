@@ -59,10 +59,15 @@ from ..main import main, HexInt
               default='0xFF',
               metavar='BYTE (supports hex with 0x, like 0xFF)',
               help='byte to use for padding.  Defaults to 0xFF.')
+@click.option('-r', '--relative',
+              is_flag=True,
+              help='enable relative address mode.  The start and end address value ' \
+                   'will be interpreted as an offset relative to the min and max address ' \
+                   'of the input file.  Negative values are allowed.')
 # Define the command code.  Notice how click will send in parsed parameters as
 # arguments to the function.  Also note click will use the docstring as the
 # full help text for the command.
-def hexpad(input_file, output, start, end, pad):
+def hexpad(input_file, output, start, end, pad, relative):
     """Pad unused bytes of Intel format hex.
 
     Given a hex file this command will fill in any unused bytes with a padding
@@ -88,20 +93,47 @@ def hexpad(input_file, output, start, end, pad):
 
     The above command will only pad unused bytes in the range 0x1000 - 0xF000
     (inclusive) with the value 0x00.
+
+    By default the start and end address are absolute values, however you can
+    instead specify a relative value that's an offset from the first/last used
+    address in the input.  For example to pad 100 bytes before first used address
+    and 200 bytes after the last used address in a hex file:
+
+      legolas hexpad input_file.hex --relative --start -100 --end 200
+
+    If either the start or end value are not specified in relative mode then a
+    relative offset of 0 will be used (i.e. the range will span the first/last
+    used address in the input).
     """
     input_hex = intelhex.IntelHex(input_file)
     padded = intelhex.IntelHex()
-    # Set start and end address to min and max address if not specified.
+    # Set start and end value if not specified.
     if start is None:
-        start = input_hex.minaddr()
+        if relative:
+            # Default to 0 offset in relative mode.
+            start = 0
+        else:
+            # Use the first used address in normal/absolute mode.
+            start = input_hex.minaddr()
     if end is None:
-        end = input_hex.maxaddr()
-    # Fail if either address is negative for some reason (bad input value).
-    if start < 0 or end < 0:
-        raise click.ClickException('Start and end address must be positive!')
-    # Also fail if the end address is before the start address.
-    if end < start:
-        raise click.ClickException('End address must be after start address!')
+        if relative:
+            # Default to 0 offset in relative mode.
+            end = 0
+        else:
+            # Use the last used address in normal/absolute mode.
+            end = input_hex.maxaddr()
+    # Do basic input validation on the start and end values in normal/absolute mode.
+    if not relative:
+        # Fail if either address is negative (bad input value).
+        if start < 0 or end < 0:
+            raise click.ClickException('Start and end address must be positive!')
+        # Also fail if the end address is before the start address.
+        if end < start:
+            raise click.ClickException('End address must be after start address!')
+    # Compute the absolute start and end address in relative mode.
+    if relative:
+        start = input_hex.minaddr() + start
+        end = input_hex.maxaddr() + end
     # Fill the padded file address range with the pad byte.
     for i in range(start, end+1):  # Use end+1 to make sure last address is padded.
         padded[i] = pad & 0xFF
